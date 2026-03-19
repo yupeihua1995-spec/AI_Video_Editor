@@ -1,13 +1,25 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Play, SkipBack, SkipForward, Volume2, Expand } from 'lucide-react';
+import { Player } from '@remotion/player';
+import { MainComposition } from '@ai-editor/remotion-core';
 
 export const VideoPreview: React.FC = () => {
 
 
+  const fps = 30;
+  const durationInFrames = 300; // 10 seconds at 30fps
+
+  // Define the style for the player to ensure it scales correctly within the container
+  const playerStyle = useMemo(() => ({
+     width: '100%',
+     height: '100%',
+     backgroundColor: 'transparent', // The composition itself handles the background
+  }), []);
+
   return (
     <div className="flex-1 flex flex-col bg-zinc-950 p-6 relative z-0">
-      {/* Container for the Remotion Player Placeholder */}
+      {/* Container for the Remotion Player */}
       <div className="flex-1 flex flex-col min-h-0 bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden relative shadow-inner">
 
         {/* Top bar */}
@@ -15,18 +27,22 @@ export const VideoPreview: React.FC = () => {
           <span className="text-zinc-200 text-sm font-medium drop-shadow-md">Remotion Player (Sandbox Preview)</span>
         </div>
 
-        {/* Video Area */}
+        {/* Video Area (Remotion Player) */}
         <div className="flex-1 flex items-center justify-center relative overflow-hidden bg-black/50">
-           {/* Placeholder for actual video content */}
-           <div className="text-center">
-             <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-                <Play className="w-8 h-8 text-zinc-500 ml-1" />
-             </div>
-             <p className="text-zinc-500 text-sm">Drop a media file here or import via AI Chat</p>
-           </div>
+            <Player
+               component={MainComposition}
+               durationInFrames={durationInFrames}
+               fps={fps}
+               compositionWidth={1920}
+               compositionHeight={1080}
+               style={playerStyle}
+               controls={true}
+               autoPlay={true}
+               loop={true}
+            />
         </div>
 
-        {/* Playback Controls Area */}
+        {/* Playback Controls Area (Placeholder UI, we'll hook this to Player ref later) */}
         <div className="h-14 bg-zinc-950/80 backdrop-blur-md border-t border-zinc-800 flex items-center px-4 justify-between shrink-0">
 
           <div className="flex items-center gap-3">
@@ -40,7 +56,7 @@ export const VideoPreview: React.FC = () => {
               <SkipForward className="w-4 h-4" fill="currentColor" />
             </button>
             <span className="text-zinc-400 text-xs font-mono ml-2 border border-zinc-800 px-2 py-1 rounded bg-zinc-900">
-              00:00:00 / 00:00:00
+              00:00:00 / 00:10:00
             </span>
           </div>
 
