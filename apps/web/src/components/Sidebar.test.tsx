@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Sidebar } from './Sidebar';
@@ -14,13 +14,13 @@ describe('Sidebar Component', () => {
     render(<Sidebar />);
 
     // Check if main header is present
-    expect(screen.getByText('AI Editor')).toBeInTheDocument();
+    expect(screen.getByText('AI Assistant')).toBeInTheDocument();
 
     // Check if input area is present
     expect(screen.getByPlaceholderText('Type your editing instruction...')).toBeInTheDocument();
 
     // The sidebar container should have the 'translate-x-0' class when open
-    const sidebarContainer = screen.getByText('AI Editor').closest('div')?.parentElement?.parentElement;
+    const sidebarContainer = screen.getByText('AI Assistant').closest('div')?.parentElement?.parentElement;
     expect(sidebarContainer).toHaveClass('translate-x-0');
     expect(sidebarContainer).not.toHaveClass('translate-x-full');
   });
@@ -32,7 +32,7 @@ describe('Sidebar Component', () => {
     render(<Sidebar />);
 
     // The sidebar container should have the 'translate-x-full' class when closed
-    const sidebarContainer = screen.getByText('AI Editor').closest('div')?.parentElement?.parentElement;
+    const sidebarContainer = screen.getByText('AI Assistant').closest('div')?.parentElement?.parentElement;
     expect(sidebarContainer).toHaveClass('translate-x-full');
     expect(sidebarContainer).not.toHaveClass('translate-x-0');
   });
@@ -41,8 +41,8 @@ describe('Sidebar Component', () => {
     render(<Sidebar />);
 
     // Find the close button (the one inside the header containing the X icon)
-    // We can target it by finding the button within the header that has the AI Editor text
-    const headerElement = screen.getByText('AI Editor').parentElement?.parentElement;
+    // We can target it by finding the button within the header that has the AI Assistant text
+    const headerElement = screen.getByText('AI Assistant').parentElement?.parentElement;
     const closeButton = headerElement?.querySelector('button');
 
     expect(closeButton).toBeInTheDocument();

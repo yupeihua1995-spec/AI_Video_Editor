@@ -18,6 +18,7 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "remotion": "^4.0.436",
+    "sucrase": "^3.35.1",
     "tailwind-merge": "^3.5.0",
     "zustand": "^5.0.12"
   },

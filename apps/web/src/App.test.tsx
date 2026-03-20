@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import App from './App';
@@ -26,7 +26,7 @@ describe('App Layout Integration', () => {
     expect(screen.getByText('Export')).toBeInTheDocument();
 
     // Sidebar Area (Should be initially open)
-    expect(screen.getByText('AI Editor')).toBeInTheDocument();
+    expect(screen.getByText('AI Assistant')).toBeInTheDocument();
 
     // Timeline Area
     expect(screen.getByText('Tracks')).toBeInTheDocument();
