@@ -16,8 +16,11 @@ describe('Sidebar Component', () => {
     // Check if main header is present
     expect(screen.getByText('AI Assistant')).toBeInTheDocument();
 
-    // Check if input area is present
-    expect(screen.getByPlaceholderText('Type your editing instruction...')).toBeInTheDocument();
+    // Check if input area is present (can be 'Connecting...' or 'Type your editing instruction...')
+    expect(
+      screen.queryByPlaceholderText('Type your editing instruction...') ||
+        screen.queryByPlaceholderText('Connecting...')
+    ).toBeInTheDocument();
 
     // The sidebar container should have the 'translate-x-0' class when open
     const sidebarContainer = screen.getByText('AI Assistant').closest('div')?.parentElement?.parentElement;

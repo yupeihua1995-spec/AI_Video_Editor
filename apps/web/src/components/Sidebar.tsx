@@ -1,19 +1,36 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useUIStore } from '../store/useUIStore';
-import { X, Send, Sparkles, Wand2, RefreshCw } from 'lucide-react';
+import { X, Send, Sparkles, Wand2, RefreshCw, Loader2, Play } from 'lucide-react';
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { AI_GENERATED_CODE, DEFAULT_COMPOSITION_CODE } from '../lib/templates';
+import { DEFAULT_COMPOSITION_CODE } from '../lib/templates';
+import { useChatSocket } from '../lib/useChatSocket';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
 export const Sidebar: React.FC = () => {
-  const { isChatSidebarOpen, closeChatSidebar, setCurrentCode, currentCode } = useUIStore();
+  const { isChatSidebarOpen, closeChatSidebar, setCurrentCode, currentCode, messages } = useUIStore();
+  const { sendMessage, isConnected, isTyping } = useChatSocket();
+  const [inputValue, setInputValue] = useState('');
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
-  const handleApplyAIEffect = () => {
-     setCurrentCode(AI_GENERATED_CODE);
+  // Auto-scroll to bottom of chat
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleSend = () => {
+    if (!inputValue.trim() || !isConnected) return;
+    sendMessage(inputValue);
+    setInputValue('');
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSend();
+    }
   };
 
   const handleReset = () => {
@@ -32,6 +49,8 @@ export const Sidebar: React.FC = () => {
         <div className="flex items-center gap-2 text-zinc-100">
           <Sparkles className="w-5 h-5 text-indigo-400" />
           <span className="font-medium tracking-wide">AI Assistant</span>
+          {!isConnected && <span className="ml-2 w-2 h-2 rounded-full bg-red-500 animate-pulse" title="Disconnected"></span>}
+          {isConnected && <span className="ml-2 w-2 h-2 rounded-full bg-green-500" title="Connected"></span>}
         </div>
         <button
           onClick={closeChatSidebar}
@@ -41,52 +60,86 @@ export const Sidebar: React.FC = () => {
         </button>
       </div>
 
-      {/* Chat History Area (Placeholder) */}
+      {/* Chat History Area */}
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
 
         {/* Intro Message */}
-        <div className="bg-zinc-800/40 border border-zinc-700/50 p-4 rounded-xl text-sm text-zinc-300 shadow-sm leading-relaxed">
-          <div className="flex items-center gap-2 font-medium text-indigo-300 mb-2">
-            <Wand2 className="w-4 h-4" />
-            <span>Sandbox Ready</span>
+        {messages.length === 0 && (
+           <div className="bg-zinc-800/40 border border-zinc-700/50 p-4 rounded-xl text-sm text-zinc-300 shadow-sm leading-relaxed">
+             <div className="flex items-center gap-2 font-medium text-indigo-300 mb-2">
+               <Wand2 className="w-4 h-4" />
+               <span>Socket Ready</span>
+             </div>
+             I'm connected to the WebSocket server! Try asking me to "add a glitch effect" or "make it bounce". I will stream the response and generate the video code in real-time.
+           </div>
+        )}
+
+        {/* Message List */}
+        {messages.map((msg, idx) => (
+          <div key={idx} className={cn("flex flex-col", msg.role === 'user' ? "items-end" : "items-start")}>
+            <div
+              className={cn(
+                "max-w-[85%] px-4 py-2.5 rounded-2xl text-sm whitespace-pre-wrap leading-relaxed",
+                msg.role === 'user'
+                  ? "bg-indigo-600 text-white rounded-tr-sm"
+                  : "bg-zinc-800 text-zinc-200 border border-zinc-700 rounded-tl-sm shadow-sm"
+              )}
+            >
+              {msg.content}
+
+              {/* Show code indicator if code was attached to this AI message */}
+              {msg.role === 'assistant' && msg.hasCodeAttached && (
+                <div className="mt-3 pt-3 border-t border-zinc-700/50 flex items-center gap-2 text-xs font-medium text-emerald-400">
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  Code injected to Sandbox
+                </div>
+              )}
+            </div>
           </div>
-          Try the code sandbox integration. Click the button below to simulate an AI generating a dynamic Remotion effect, compiling it in the browser, and rendering it instantly in the player.
-        </div>
+        ))}
 
-        {/* Sandbox Test Controls */}
-        <div className="flex flex-col gap-3 mt-4">
-           {currentCode === DEFAULT_COMPOSITION_CODE ? (
-              <button
-                 onClick={handleApplyAIEffect}
-                 className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 px-4 rounded-lg shadow-md transition-all active:scale-95"
-              >
-                 <Sparkles className="w-4 h-4" />
-                 Simulate AI Code Gen
-              </button>
-           ) : (
-              <button
-                 onClick={handleReset}
-                 className="flex items-center justify-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-medium py-2.5 px-4 rounded-lg shadow-md border border-zinc-700 transition-all active:scale-95"
-              >
-                 <RefreshCw className="w-4 h-4" />
-                 Reset Composition
-              </button>
-           )}
-        </div>
+        {isTyping && (
+           <div className="flex gap-1 items-center self-start text-zinc-500 px-4 py-2">
+             <span className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce"></span>
+             <span className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+             <span className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></span>
+           </div>
+        )}
 
+        <div ref={chatEndRef} />
       </div>
+
+      {/* Sandbox Test Controls (Always keep the reset button handy) */}
+      {currentCode !== DEFAULT_COMPOSITION_CODE && (
+          <div className="px-4 pb-2 shrink-0">
+             <button
+                 onClick={handleReset}
+                 className="w-full flex items-center justify-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-medium py-1.5 px-3 rounded text-xs shadow-sm border border-zinc-700 transition-all active:scale-95"
+              >
+                 <RefreshCw className="w-3 h-3" />
+                 Reset Composition to Default
+              </button>
+          </div>
+      )}
 
       {/* Input Area */}
       <div className="p-4 bg-zinc-900 border-t border-zinc-800 shrink-0">
         <div className="relative flex items-center bg-zinc-950 rounded-lg border border-zinc-800 focus-within:border-indigo-500/50 focus-within:ring-1 focus-within:ring-indigo-500/50 transition-all shadow-inner">
           <input
             type="text"
-            placeholder="Type your editing instruction..."
-            className="w-full bg-transparent text-sm text-zinc-100 placeholder-zinc-500 px-4 py-3 outline-none"
-            disabled
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyPress}
+            placeholder={isConnected ? "Ask AI to edit the video..." : "Connecting..."}
+            className="w-full bg-transparent text-sm text-zinc-100 placeholder-zinc-500 px-4 py-3 outline-none disabled:opacity-50"
+            disabled={!isConnected || isTyping}
           />
-          <button className="absolute right-2 p-1.5 text-zinc-500 cursor-not-allowed rounded-md transition-colors">
-            <Send className="w-4 h-4" />
+          <button
+            onClick={handleSend}
+            disabled={!inputValue.trim() || !isConnected || isTyping}
+            className="absolute right-2 p-1.5 text-zinc-500 hover:text-indigo-400 disabled:hover:text-zinc-500 cursor-pointer disabled:cursor-not-allowed rounded-md transition-colors"
+          >
+            {isTyping ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </button>
         </div>
       </div>

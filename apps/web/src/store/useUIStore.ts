@@ -1,29 +1,35 @@
-import { create } from 'zustand'
-import { DEFAULT_COMPOSITION_CODE } from '../lib/templates'
-import type React from 'react'
+import { create } from 'zustand';
+import { DEFAULT_COMPOSITION_CODE } from '../lib/templates';
+import type React from 'react';
+import { ChatMessage } from '@ai-editor/shared-types';
 
-export type CompilationStatus = 'idle' | 'compiling' | 'success' | 'error'
+export type CompilationStatus = 'idle' | 'compiling' | 'success' | 'error';
 
 interface UIState {
-  // Sidebar state
-  isChatSidebarOpen: boolean
-  toggleChatSidebar: () => void
-  openChatSidebar: () => void
-  closeChatSidebar: () => void
+  // Sidebar
+  isChatSidebarOpen: boolean;
+  toggleChatSidebar: () => void;
+  openChatSidebar: () => void;
+  closeChatSidebar: () => void;
 
-  // Sandbox & Code State
-  currentCode: string
-  setCurrentCode: (code: string) => void
+  // Chat History
+  messages: ChatMessage[];
+  addMessage: (message: ChatMessage) => void;
+  updateMessageContent: (id: string, chunk: string) => void;
+  markMessageComplete: (id: string) => void;
 
-  compilationStatus: CompilationStatus
-  setCompilationStatus: (status: CompilationStatus) => void
+  // Sandbox & Code
+  currentCode: string;
+  setCurrentCode: (code: string) => void;
 
-  compilationError: string | null
-  setCompilationError: (error: string | null) => void
+  compilationStatus: CompilationStatus;
+  setCompilationStatus: (status: CompilationStatus) => void;
 
-  // This holds the actual React functional component returned by the sandbox
-  ActiveComposition: React.FC | null
-  setActiveComposition: (component: React.FC | null) => void
+  compilationError: string | null;
+  setCompilationError: (error: string | null) => void;
+
+  ActiveComposition: React.FC | null;
+  setActiveComposition: (component: React.FC | null) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -32,6 +38,22 @@ export const useUIStore = create<UIState>((set) => ({
   toggleChatSidebar: () => set((state) => ({ isChatSidebarOpen: !state.isChatSidebarOpen })),
   openChatSidebar: () => set({ isChatSidebarOpen: true }),
   closeChatSidebar: () => set({ isChatSidebarOpen: false }),
+
+  // Chat History
+  messages: [],
+  addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
+  updateMessageContent: (id, chunk) =>
+    set((state) => ({
+      messages: state.messages.map((msg) =>
+        msg.id === id ? { ...msg, content: msg.content + chunk } : msg
+      ),
+    })),
+  markMessageComplete: (id) =>
+    set((state) => ({
+      messages: state.messages.map((msg) =>
+        msg.id === id ? { ...msg, hasCodeAttached: true } : msg
+      ),
+    })),
 
   // Sandbox
   currentCode: DEFAULT_COMPOSITION_CODE,
@@ -45,4 +67,4 @@ export const useUIStore = create<UIState>((set) => ({
 
   ActiveComposition: null,
   setActiveComposition: (component) => set({ ActiveComposition: component }),
-}))
+}));

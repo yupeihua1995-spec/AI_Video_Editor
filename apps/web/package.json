@@ -12,12 +12,14 @@
   },
   "dependencies": {
     "@ai-editor/remotion-core": "workspace:*",
+    "@ai-editor/shared-types": "workspace:*",
     "@remotion/player": "^4.0.436",
     "clsx": "^2.1.1",
     "lucide-react": "^0.577.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "remotion": "^4.0.436",
+    "socket.io-client": "^4.8.3",
     "sucrase": "^3.35.1",
     "tailwind-merge": "^3.5.0",
     "zustand": "^5.0.12"
