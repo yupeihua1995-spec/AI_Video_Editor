@@ -20,7 +20,9 @@ interface UIState {
 
   // Sandbox & Code
   currentCode: string;
+  previousCode: string; // Store last known good code for fallback
   setCurrentCode: (code: string) => void;
+  revertToPreviousCode: () => void;
 
   compilationStatus: CompilationStatus;
   setCompilationStatus: (status: CompilationStatus) => void;
@@ -57,7 +59,16 @@ export const useUIStore = create<UIState>((set) => ({
 
   // Sandbox
   currentCode: DEFAULT_COMPOSITION_CODE,
-  setCurrentCode: (code) => set({ currentCode: code }),
+  previousCode: DEFAULT_COMPOSITION_CODE,
+  setCurrentCode: (code) => set((state) => ({
+    previousCode: state.currentCode,
+    currentCode: code
+  })),
+  revertToPreviousCode: () => set((state) => ({
+    currentCode: state.previousCode,
+    compilationError: null,
+    compilationStatus: 'idle'
+  })),
 
   compilationStatus: 'idle',
   setCompilationStatus: (status) => set({ compilationStatus: status }),

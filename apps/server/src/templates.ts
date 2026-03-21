@@ -168,6 +168,23 @@ const Subtitle = ({ text }: { text: string }) => {
 };
 `;
 
+export const getCrashingCode = () => `
+import React from 'react';
+import { AbsoluteFill } from 'remotion';
+
+export const MainComposition = () => {
+  // Simulate a deliberate runtime error to trigger the ErrorBoundary
+  const nonexistentVariable: any = undefined;
+
+  return (
+    <AbsoluteFill style={{ backgroundColor: '#18181b', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <h1>Crash Test</h1>
+      {nonexistentVariable.someProperty.thatCausesCrash}
+    </AbsoluteFill>
+  );
+};
+`;
+
 export const getDefaultCode = (prompt: string) => `
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, spring, interpolate } from 'remotion';

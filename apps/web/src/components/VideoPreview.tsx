@@ -5,9 +5,40 @@ import { Player } from '@remotion/player';
 import { MainComposition as FallbackComposition } from '@ai-editor/remotion-core';
 import { transform } from 'sucrase';
 import * as remotionModules from 'remotion'; // Export everything from remotion to inject
+import { ErrorBoundary } from './ErrorBoundary';
+
+import { useRef } from 'react';
+
+const PlayerErrorFallback: React.FC<{ error: Error | undefined; resetError: () => void }> = ({ error, resetError }) => {
+  const { revertToPreviousCode, addMessage } = useUIStore();
+  const hasTriggeredRef = useRef(false);
+
+  useEffect(() => {
+    if (hasTriggeredRef.current) return;
+    hasTriggeredRef.current = true;
+
+    console.error('Remotion Player internal error:', error);
+    useUIStore.getState().setCompilationStatus('error');
+
+    setTimeout(() => {
+      revertToPreviousCode();
+      resetError();
+      addMessage({
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: `⚠️ 代码运行时崩溃 (Remotion 内部错误)，已自动为您回退。\n错误信息: ${error?.message || '未知错误'}`,
+        timestamp: Date.now(),
+        hasCodeAttached: false,
+      });
+    }, 100);
+  }, [error, resetError, revertToPreviousCode, addMessage]);
+
+  return <div className="text-red-400 p-4 border border-red-500/30 bg-red-500/10 rounded">Remotion 渲染出错，视频已重置。</div>;
+};
 
 export const VideoPreview: React.FC = () => {
-  const { currentCode, compilationStatus } = useUIStore();
+  const { currentCode, compilationStatus, revertToPreviousCode, addMessage } = useUIStore();
+  const errorBoundaryRef = useRef<ErrorBoundary>(null);
 
   // Local state to hold the dynamically evaluated component
   const [ActiveComponent, setActiveComponent] = useState<React.FC | null>(null);
@@ -60,11 +91,23 @@ export const VideoPreview: React.FC = () => {
             setActiveComponent(null);
             useUIStore.getState().setCompilationStatus('error');
             useUIStore.getState().setCompilationError(err.message || 'Compilation failed');
+
+            // Trigger automatic fallback for transpilation errors
+            setTimeout(() => {
+                revertToPreviousCode();
+                addMessage({
+                    id: Date.now().toString(),
+                    role: 'assistant',
+                    content: `⚠️ 代码编译失败，已自动为您回退到上一个可用版本。\n错误信息: ${err.message}`,
+                    timestamp: Date.now(),
+                    hasCodeAttached: false,
+                });
+            }, 100);
         }
     }, 300); // 300ms artificial delay to simulate async compilation
 
     return () => clearTimeout(timer);
-  }, [currentCode]);
+  }, [currentCode, revertToPreviousCode, addMessage]);
 
   // Determine which component to render in the Player
   const ComponentToRender = (compilationStatus === 'success' && ActiveComponent)
@@ -90,18 +133,40 @@ export const VideoPreview: React.FC = () => {
         {/* Video Area (Remotion Player) */}
         <div className="flex-1 flex items-center justify-center relative overflow-hidden bg-black/50 z-10">
             {/* The key prop forces Player to remount completely when the component changes to prevent hook mismatches */}
-            <Player
-               key={compilationStatus === 'success' ? 'dynamic' : 'fallback'}
-               component={ComponentToRender}
-               durationInFrames={durationInFrames}
-               fps={fps}
-               compositionWidth={1920}
-               compositionHeight={1080}
-               style={playerStyle}
-               controls={true}
-               autoPlay={true}
-               loop={true}
-            />
+            <ErrorBoundary
+                ref={errorBoundaryRef}
+                fallback={<div className="text-red-400 p-4 border border-red-500/30 bg-red-500/10 rounded">渲染出错，视频已重置。</div>}
+                onError={(err) => {
+                    useUIStore.getState().setCompilationStatus('error');
+                    setTimeout(() => {
+                        revertToPreviousCode();
+                        errorBoundaryRef.current?.resetError();
+                        addMessage({
+                            id: Date.now().toString(),
+                            role: 'assistant',
+                            content: `⚠️ 代码运行时崩溃，已自动为您回退到上一个可用版本。\n错误信息: ${err.message}`,
+                            timestamp: Date.now(),
+                            hasCodeAttached: false,
+                        });
+                    }, 100);
+                }}
+            >
+                <Player
+                   key={compilationStatus === 'success' ? 'dynamic' : 'fallback'}
+                   component={ComponentToRender}
+                   durationInFrames={durationInFrames}
+                   fps={fps}
+                   compositionWidth={1920}
+                   compositionHeight={1080}
+                   style={playerStyle}
+                   controls={true}
+                   autoPlay={true}
+                   loop={true}
+                   errorFallback={(err) => {
+                       return <PlayerErrorFallback error={err.error} resetError={() => errorBoundaryRef.current?.resetError()} />;
+                   }}
+                />
+            </ErrorBoundary>
         </div>
 
         {/* Playback Controls Area */}
