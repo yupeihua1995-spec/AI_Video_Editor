@@ -70,7 +70,7 @@ export const Sidebar: React.FC = () => {
                <Wand2 className="w-4 h-4" />
                <span>AI Engine Ready</span>
              </div>
-             I'm connected! Try asking me to "add a glitch effect" or "给视频加上字幕". I will stream the response and generate the Remotion video code in real-time.
+             I'm connected! Try asking me to "给视频加上字幕" or "帮我去掉视频里的水词". I will stream the response and generate the Remotion video code in real-time.
            </div>
         )}
 
