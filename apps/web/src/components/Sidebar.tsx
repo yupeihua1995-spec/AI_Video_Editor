@@ -68,9 +68,9 @@ export const Sidebar: React.FC = () => {
            <div className="bg-zinc-800/40 border border-zinc-700/50 p-4 rounded-xl text-sm text-zinc-300 shadow-sm leading-relaxed">
              <div className="flex items-center gap-2 font-medium text-indigo-300 mb-2">
                <Wand2 className="w-4 h-4" />
-               <span>Socket Ready</span>
+               <span>AI Engine Ready</span>
              </div>
-             I'm connected to the WebSocket server! Try asking me to "add a glitch effect" or "make it bounce". I will stream the response and generate the video code in real-time.
+             I'm connected! Try asking me to "add a glitch effect" or "给视频加上字幕". I will stream the response and generate the Remotion video code in real-time.
            </div>
         )}
 

@@ -4,7 +4,7 @@
   "description": "AI Native Editor Backend WebSocket Server",
   "main": "dist/index.js",
   "scripts": {
-    "start": "node dist/index.js",
+    "start": "ts-node src/index.ts",
     "dev": "nodemon src/index.ts",
     "build": "tsc"
   },
